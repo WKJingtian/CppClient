@@ -157,6 +157,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Audio\AudioCenter.cpp" />
+    <ClCompile Include="Game\GameItem\Card.cpp" />
+    <ClCompile Include="Game\GameItem\Seat.cpp" />
+    <ClCompile Include="Game\HoldemPokerGame.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Net\NetPack.cpp" />
     <ClCompile Include="Net\NetPackHandler.cpp" />
@@ -164,6 +167,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Audio\AudioCenter.h" />
+    <ClInclude Include="Game\GameItem\Card.h" />
+    <ClInclude Include="Game\GameItem\Deck.h" />
+    <ClInclude Include="Game\GameItem\HandEvaluator.h" />
+    <ClInclude Include="Game\GameItem\Seat.h" />
+    <ClInclude Include="Game\HoldemPokerGame.h" />
     <ClInclude Include="Net\NetPack.h" />
     <ClInclude Include="Net\NetPackHandler.h" />
     <ClInclude Include="Net\Player.h" />

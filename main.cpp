@@ -152,19 +152,117 @@ int main(int* args)
 			{
 				selfPlayer.Send(RpcEnum::rpc_server_print_user, [](NetPack& pack) {});
 			}
-			else if (input == "HELP\0")
+			// holdem poker section
+			else if (tokens[0] == "TABLEINFO")
 			{
-				std::cout << "========== WKR's chatting room user guide ==========" << std::endl;
-				std::cout << "SETNAME {yourname}: change your name " << std::endl;
-				std::cout << "SETLANG {language}: change the language of your text. currently, there are only en (English) and cn (Chinese)" << std::endl;
-				std::cout << "MUTE: to mute the chat room" << std::endl;
-				std::cout << "UNMUTE: unmute the chat room" << std::endl;
-				std::cout << "USERLIST: check all online users" << std::endl;
-				std::cout << "MAKEROOM {roomId}: room id has to be a number" << std::endl;
-				std::cout << "TOROOM {roomId}: switch to a different room, room id has to be a number" << std::endl;
-				std::cout << "[{language}] {thingsToSay}: say something to other users in the same room with given language" << std::endl;
-				std::cout << "    for example: \"[en] hello\" is to say hello in english" << std::endl;
-				std::cout << "{thingsToSay}: say something with previously set language" << std::endl;
+				// Request current table state (no parameters needed)
+				selfPlayer.Send(RpcEnum::rpc_server_get_poker_table_info, [](NetPack& pack) {});
+			}
+			else if (tokens[0] == "SIT" && tokens.size() >= 2)
+			{
+				int seatIdx = 0;
+				try { seatIdx = std::stoi(tokens[1]); }
+				catch (std::exception const& e)
+				{
+					std::cout << e.what() << std::endl;
+					return;
+				}
+				selfPlayer.Send(RpcEnum::rpc_server_sit_down, [seatIdx](NetPack& pack) {
+					pack.WriteInt32(seatIdx);
+					});
+			}
+			else if (tokens[0] == "SIT" && tokens.size() >= 2)
+			{
+				int seatIdx = 0;
+				try { seatIdx = std::stoi(tokens[1]); }
+				catch (std::exception const& e)
+				{
+					std::cout << e.what() << std::endl;
+					return;
+				}
+				selfPlayer.Send(RpcEnum::rpc_server_sit_down, [seatIdx](NetPack& pack) {
+					pack.WriteInt32(seatIdx);
+					});
+			}
+			else if (tokens[0] == "STANDUP")
+			{
+				// No parameters needed
+				selfPlayer.Send(RpcEnum::rpc_server_poker_standup, [](NetPack& pack) {});
+			}
+			else if (tokens[0] == "STANDUP")
+			{
+				// No parameters needed
+				selfPlayer.Send(RpcEnum::rpc_server_poker_standup, [](NetPack& pack) {});
+			}
+			else if (tokens[0] == "SETBLINDS" && tokens.size() >= 3)
+			{
+				int smallBlind = 0;
+				int bigBlind = 0;
+				try
+				{
+					smallBlind = std::stoi(tokens[1]);
+					bigBlind = std::stoi(tokens[2]);
+				}
+				catch (std::exception const& e)
+				{
+					std::cout << e.what() << std::endl;
+					return;
+				}
+				selfPlayer.Send(RpcEnum::rpc_server_poker_set_blinds, [smallBlind, bigBlind](NetPack& pack) {
+					pack.WriteInt32(smallBlind);
+					pack.WriteInt32(bigBlind);
+					});
+			}
+			// CHECK or CALL
+			else if (tokens[0] == "CHECK" || tokens[0] == "CALL")
+			{
+				uint8_t action = 0;  // CheckCall
+				selfPlayer.Send(RpcEnum::rpc_server_poker_action, [action](NetPack& pack) {
+					pack.WriteUInt8(action);
+					pack.WriteInt32(0);  // amount not used for check/call
+					});
+			}
+			// BET or RAISE
+			else if ((tokens[0] == "BET" || tokens[0] == "RAISE") && tokens.size() >= 2)
+			{
+				int amount = 0;
+				try { amount = std::stoi(tokens[1]); }
+				catch (std::exception const& e)
+				{
+					std::cout << e.what() << std::endl;
+					return;
+				}
+				uint8_t action = 1;  // BetRaise
+				selfPlayer.Send(RpcEnum::rpc_server_poker_action, [action, amount](NetPack& pack) {
+					pack.WriteUInt8(action);
+					pack.WriteInt32(amount);
+					});
+			}
+			// FOLD
+			else if (tokens[0] == "FOLD")
+			{
+				uint8_t action = 2;  // Fold
+				selfPlayer.Send(RpcEnum::rpc_server_poker_action, [action](NetPack& pack) {
+					pack.WriteUInt8(action);
+					pack.WriteInt32(0);
+					});
+			}
+			// help and error section
+			else if (tokens[0] == "HELP")
+			{
+				if (tokens.size() == 2)
+				{
+					if (tokens[1] == "-HOLDEM")
+						std::cout << HelpStrings::HOLDEM << std::endl;
+					else if (tokens[1] == "-GENERIC")
+						std::cout << HelpStrings::GENERIC << std::endl;
+				}
+				else
+				{
+					std::cout << "Available help topics:" << std::endl;
+					std::cout << "		-GENERIC" << std::endl;
+					std::cout << "		-HOLDEM" << std::endl;
+				}
 			}
 			else if (tokens[0] == "LOGIN" || tokens[0] == "REGISTER" || tokens[0] == "SETNAME" ||
 				tokens[0] == "SETLANG" || tokens[0] == "TOROOM")
@@ -205,7 +303,7 @@ int main(int* args)
 			if(er > 1) std::cout << "NetPackHandler::DoOneTask WARNING: " << er << std::endl;
 			er = NetPackHandler::DoOneTask();
 		}
-		std::this_thread::sleep_for(std::chrono::milliseconds(20));
+		std::this_thread::sleep_for(std::chrono::milliseconds(200));
 	}
 	inputThread.join();
 }

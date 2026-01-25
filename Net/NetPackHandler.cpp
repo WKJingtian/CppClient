@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "NetPackHandler.h"
+#include "Game/HoldemPokerGame.h"
 
 std::queue<NetPack> NetPackHandler::_taskList = std::queue<NetPack>();
 std::mutex NetPackHandler::_mutex{};
@@ -87,6 +88,130 @@ int NetPackHandler::DoOneTask()
 	else if (task.MsgType() == RpcEnum::rpc_client_tick)
 	{
 		// do nothing
+	}
+	else if (task.MsgType() == RpcEnum::rpc_client_get_poker_table_info)
+	{
+		task.ReadInt32();
+		task.ReadUInt8();
+		task.ReadInt32();
+	}
+	else if (task.MsgType() == RpcEnum::rpc_client_get_poker_table_info)
+	{
+		int roomId = task.ReadInt32();
+
+		// Use shared HoldemPokerGame class to parse entire table state
+		HoldemPokerGame localGame;
+		localGame.ReadTable(task);
+
+		// Now you can access all data through the game object
+		auto stage = localGame.GetStage();
+		int pot = localGame.GetTotalPot();
+		int actingPlayer = localGame.ActingPlayerId();
+		int smallBlind = localGame.GetSmallBlind();
+		int bigBlind = localGame.GetBigBlind();
+
+		const auto& community = localGame.GetCommunity();
+		const auto& seats = localGame.GetSeats();
+		const auto& sidePots = localGame.GetSidePots();
+
+		// Example: print table state
+		std::cout << "Room " << roomId << " - Stage: " << (int)stage
+			<< ", Pot: " << pot << std::endl;
+
+		for (const Seat& seat : seats)
+		{
+			if (seat.playerId < 0) continue;
+			std::cout << "  Seat " << seat.seatIndex
+				<< ": Player " << seat.playerId
+				<< ", Chips: " << seat.chips
+				<< (seat.inHand ? " [IN HAND]" : "")
+				<< (seat.folded ? " [FOLDED]" : "")
+				<< (seat.sittingOut ? " [SITTING OUT]" : "")
+				<< std::endl;
+
+			// Hole cards are available in seat.hole[0] and seat.hole[1]
+			// if server sent them (self or showdown)
+			if (seat.hole[0].IsValid())
+			{
+				std::cout << "    Hole: " << seat.hole[0].ToString()
+					<< " " << seat.hole[1].ToString() << std::endl;
+			}
+		}
+	}
+	else if (task.MsgType() == RpcEnum::rpc_client_sit_down)
+	{
+		int actualSeatIdx = task.ReadInt32();
+		int initialChips = task.ReadInt32();   // Always 0, need to buy in
+		int minBuyin = task.ReadInt32();
+		int bigBlind = task.ReadInt32();       // -1 if not set
+		int walletBalance = task.ReadInt32();  // Account balance
+
+		std::cout << "Sat down at seat " << actualSeatIdx << std::endl;
+		std::cout << "Min buy-in: " << minBuyin
+			<< ", Your wallet: " << walletBalance << std::endl;
+
+		if (bigBlind < 0)
+			std::cout << "Warning: Blinds not configured yet!" << std::endl;
+	}
+	else if (task.MsgType() == RpcEnum::rpc_client_sit_down)
+	{
+		int actualSeatIdx = task.ReadInt32();
+		int initialChips = task.ReadInt32();   // Always 0, need to buy in
+		int minBuyin = task.ReadInt32();
+		int bigBlind = task.ReadInt32();       // -1 if not set
+		int walletBalance = task.ReadInt32();  // Account balance
+
+		std::cout << "Sat down at seat " << actualSeatIdx << std::endl;
+		std::cout << "Min buy-in: " << minBuyin
+			<< ", Your wallet: " << walletBalance << std::endl;
+
+		if (bigBlind < 0)
+			std::cout << "Warning: Blinds not configured yet!" << std::endl;
+	}
+	else if (task.MsgType() == RpcEnum::rpc_client_sit_down)
+	{
+		int actualSeatIdx = task.ReadInt32();
+		int initialChips = task.ReadInt32();   // Always 0, need to buy in
+		int minBuyin = task.ReadInt32();
+		int bigBlind = task.ReadInt32();       // -1 if not set
+		int walletBalance = task.ReadInt32();  // Account balance
+
+		std::cout << "Sat down at seat " << actualSeatIdx << std::endl;
+		std::cout << "Min buy-in: " << minBuyin
+			<< ", Your wallet: " << walletBalance << std::endl;
+
+		if (bigBlind < 0)
+			std::cout << "Warning: Blinds not configured yet!" << std::endl;
+	}
+	else if (task.MsgType() == RpcEnum::rpc_client_sit_down)
+	{
+		int actualSeatIdx = task.ReadInt32();
+		int initialChips = task.ReadInt32();   // Always 0, need to buy in
+		int minBuyin = task.ReadInt32();
+		int bigBlind = task.ReadInt32();       // -1 if not set
+		int walletBalance = task.ReadInt32();  // Account balance
+
+		std::cout << "Sat down at seat " << actualSeatIdx << std::endl;
+		std::cout << "Min buy-in: " << minBuyin
+			<< ", Your wallet: " << walletBalance << std::endl;
+
+		if (bigBlind < 0)
+			std::cout << "Warning: Blinds not configured yet!" << std::endl;
+	}
+	else if (task.MsgType() == RpcEnum::rpc_client_sit_down)
+	{
+		int actualSeatIdx = task.ReadInt32();
+		int initialChips = task.ReadInt32();   // Always 0, need to buy in
+		int minBuyin = task.ReadInt32();
+		int bigBlind = task.ReadInt32();       // -1 if not set
+		int walletBalance = task.ReadInt32();  // Account balance
+
+		std::cout << "Sat down at seat " << actualSeatIdx << std::endl;
+		std::cout << "Min buy-in: " << minBuyin
+			<< ", Your wallet: " << walletBalance << std::endl;
+
+		if (bigBlind < 0)
+			std::cout << "Warning: Blinds not configured yet!" << std::endl;
 	}
 
 	return 0;

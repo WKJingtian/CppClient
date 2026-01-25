@@ -34,6 +34,8 @@
 #include "Net/Player.h"
 #include "Audio/AudioCenter.h"
 
+#include "Helper/HelpString.h"
+
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
