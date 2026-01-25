@@ -1,4 +1,4 @@
-#include "pch.h"
+﻿#include "pch.h"
 #include "AudioCenter.h"
 
 AudioCenter& AudioCenter::Inst()
@@ -20,14 +20,37 @@ void AudioCenter::AddVoiceMsg(std::string msg, Language lang)
 void AudioCenter::PlayVoiceMsg()
 {
 	int options = 0;
-	Py_Initialize();
+	PyConfig config;
+	PyConfig_InitIsolatedConfig(&config);
+	PyConfig_SetString(&config, &config.executable, L".\\Python\\embed\\python.exe");
+	PyConfig_SetString(&config, &config.home, L".\\Python\\embed");
+	config.site_import = 1;
+
+	// 显式设置搜索路径
+	config.module_search_paths_set = 1;
+	PyWideStringList_Append(&config.module_search_paths, L".\\Python\\embed");
+	PyWideStringList_Append(&config.module_search_paths, L".\\Python\\embed\\python314.zip");          // 标准库
+	PyWideStringList_Append(&config.module_search_paths, L".\\Python\\embed\\Lib\\site-packages");     // 你的第三方库
+
+	auto status = Py_InitializeFromConfig(&config);
+	PyConfig_Clear(&config);
+
+	if (PyStatus_Exception(status)) {
+		std::cerr << "embeded python init failed\n";
+		PyErr_Print();
+		Py_ExitStatusException(status);
+	}
 
 	PyObject* sysPath = PySys_GetObject("path");
 	PyList_Append(sysPath, PyUnicode_FromString("pyScript\\."));
 	PyObject* pName = PyUnicode_DecodeFSDefault("PyTTSModule"); // Python script name without .py
 	PyObject* pModule = PyImport_Import(pName);
+	if (pModule == NULL)
+	{
+		std::cerr << "py module is null\n";
+		PyErr_Print();
+	}
 	Py_DECREF(pName);
-	if (pModule == NULL) std::cerr << "py module is null\n";
 
 	PyObject* initFunc = PyObject_GetAttrString(pModule, "init_tts_engine");
 	PyObject* sayFunc = PyObject_GetAttrString(pModule, "say_by_engine");

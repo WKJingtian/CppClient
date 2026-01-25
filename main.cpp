@@ -14,6 +14,9 @@ std::vector<std::string> Split(const std::string& str)
 int main(int* args)
 {
 	std::cout << "cpp client project start" << std::endl;
+	system("chcp 936");
+
+	AudioCenter::Inst();
 
 	WSADATA wsaData;
 	int iResult;
@@ -68,18 +71,21 @@ int main(int* args)
 		return 1;
 	}
 
-	AudioCenter::Inst();
-
 	Player selfPlayer(std::move(connectSocket));
 	auto inputFunc = [&]()
 	{
 		char inputBuffer[200];
+		int currentRoom = -1;  // Track current active room for multi-room support
+		
 		while (!selfPlayer.Expired())
 		{
 			bool waitingReturn = false;
 			std::cin.getline(inputBuffer, 200);
 			std::string input = std::string(inputBuffer);
 			auto tokens = Split(input);
+			
+			if (tokens.empty()) continue;
+			
 			if (input == "QUIT\0")
 				selfPlayer.Delete();
 			else if (input == "MUTE\0")
@@ -90,27 +96,22 @@ int main(int* args)
 			{
 				auto idStr = tokens[1];
 				auto pwdStr = tokens[2];
-				auto id = 0;
+				int id = 0;
 				try { id = std::stoi(idStr); }
-				catch (std::exception const& e)
-				{
-					std::cout << e.what() << std::endl;
-				}
-				selfPlayer.Send(RpcEnum::rpc_server_log_in, [id, pwdStr](NetPack& pack)
-					{
-						pack.WriteUInt32(id);
-						pack.WriteString(pwdStr);
-					});
+				catch (std::exception const& e) { std::cout << e.what() << std::endl; continue; }
+				selfPlayer.Send(RpcEnum::rpc_server_log_in, [id, pwdStr](NetPack& pack) {
+					pack.WriteUInt32(id);
+					pack.WriteString(pwdStr);
+				});
 			}
 			else if (tokens[0] == "REGISTER" && tokens.size() == 3)
 			{
 				auto nameStr = tokens[1];
 				auto pwdStr = tokens[2];
-				selfPlayer.Send(RpcEnum::rpc_server_register, [nameStr, pwdStr](NetPack& pack)
-					{
-						pack.WriteString(nameStr);
-						pack.WriteString(pwdStr);
-					});
+				selfPlayer.Send(RpcEnum::rpc_server_register, [nameStr, pwdStr](NetPack& pack) {
+					pack.WriteString(nameStr);
+					pack.WriteString(pwdStr);
+				});
 			}
 			else if (tokens[0] == "SETNAME" && tokens.size() == 2)
 			{
@@ -124,25 +125,35 @@ int main(int* args)
 			}
 			else if (tokens[0] == "MAKEROOM" && tokens.size() == 2)
 			{
-				auto typeStr = tokens[1];
 				uint16_t type = 0;
-				try { type = (uint16_t)std::stoi(typeStr); }
-				catch (std::exception const& e)
-				{
-					std::cout << e.what() << std::endl;
-				}
+				try { type = (uint16_t)std::stoi(tokens[1]); }
+				catch (std::exception const& e) { std::cout << e.what() << std::endl; continue; }
 				selfPlayer.Send(RpcEnum::rpc_server_create_room, [type](NetPack& pack) { pack.WriteUInt16(type); });
 			}
 			else if (tokens[0] == "TOROOM" && tokens.size() == 2)
 			{
-				auto goTo = tokens[1];
-				auto roomIdx = 0;
-				try { roomIdx = std::stoi(goTo); }
-				catch (std::exception const& e)
-				{
-					std::cout << e.what() << std::endl;
-				}
+				int roomIdx = 0;
+				try { roomIdx = std::stoi(tokens[1]); }
+				catch (std::exception const& e) { std::cout << e.what() << std::endl; continue; }
+				currentRoom = roomIdx;
 				selfPlayer.Send(RpcEnum::rpc_server_goto_room, [roomIdx](NetPack& pack) { pack.WriteInt32(roomIdx); });
+			}
+			else if (tokens[0] == "LEAVEROOM" && tokens.size() == 2)
+			{
+				int roomIdx = 0;
+				try { roomIdx = std::stoi(tokens[1]); }
+				catch (std::exception const& e) { std::cout << e.what() << std::endl; continue; }
+				selfPlayer.Send(RpcEnum::rpc_server_leave_room, [roomIdx](NetPack& pack) { pack.WriteInt32(roomIdx); });
+			}
+			else if (input == "MYROOMS\0")
+			{
+				selfPlayer.Send(RpcEnum::rpc_server_get_my_rooms, [](NetPack& pack) {});
+			}
+			else if (tokens[0] == "USEROOM" && tokens.size() == 2)
+			{
+				try { currentRoom = std::stoi(tokens[1]); }
+				catch (std::exception const& e) { std::cout << e.what() << std::endl; continue; }
+				std::cout << "Current room set to " << currentRoom << std::endl;
 			}
 			else if (input == "ROOMLIST\0")
 			{
@@ -152,102 +163,86 @@ int main(int* args)
 			{
 				selfPlayer.Send(RpcEnum::rpc_server_print_user, [](NetPack& pack) {});
 			}
-			// holdem poker section
+			// ========== Poker commands (require currentRoom) ==========
 			else if (tokens[0] == "TABLEINFO")
 			{
-				// Request current table state (no parameters needed)
-				selfPlayer.Send(RpcEnum::rpc_server_get_poker_table_info, [](NetPack& pack) {});
+				if (currentRoom < 0) { std::cout << "ERROR: Use USEROOM <id> first" << std::endl; continue; }
+				selfPlayer.Send(RpcEnum::rpc_server_get_poker_table_info, [currentRoom](NetPack& pack) {
+					pack.WriteInt32(currentRoom);
+				});
 			}
 			else if (tokens[0] == "SIT" && tokens.size() >= 2)
 			{
+				if (currentRoom < 0) { std::cout << "ERROR: Use USEROOM <id> first" << std::endl; continue; }
 				int seatIdx = 0;
 				try { seatIdx = std::stoi(tokens[1]); }
-				catch (std::exception const& e)
-				{
-					std::cout << e.what() << std::endl;
-					return;
-				}
-				selfPlayer.Send(RpcEnum::rpc_server_sit_down, [seatIdx](NetPack& pack) {
+				catch (std::exception const& e) { std::cout << e.what() << std::endl; continue; }
+				selfPlayer.Send(RpcEnum::rpc_server_sit_down, [currentRoom, seatIdx](NetPack& pack) {
+					pack.WriteInt32(currentRoom);
 					pack.WriteInt32(seatIdx);
-					});
+				});
 			}
-			else if (tokens[0] == "SIT" && tokens.size() >= 2)
+			else if (tokens[0] == "BUYIN" && tokens.size() >= 2)
 			{
-				int seatIdx = 0;
-				try { seatIdx = std::stoi(tokens[1]); }
-				catch (std::exception const& e)
-				{
-					std::cout << e.what() << std::endl;
-					return;
-				}
-				selfPlayer.Send(RpcEnum::rpc_server_sit_down, [seatIdx](NetPack& pack) {
-					pack.WriteInt32(seatIdx);
-					});
+				if (currentRoom < 0) { std::cout << "ERROR: Use USEROOM <id> first" << std::endl; continue; }
+				int amount = 0;
+				try { amount = std::stoi(tokens[1]); }
+				catch (std::exception const& e) { std::cout << e.what() << std::endl; continue; }
+				selfPlayer.Send(RpcEnum::rpc_server_poker_buyin, [currentRoom, amount](NetPack& pack) {
+					pack.WriteInt32(currentRoom);
+					pack.WriteInt32(amount);
+				});
 			}
 			else if (tokens[0] == "STANDUP")
 			{
-				// No parameters needed
-				selfPlayer.Send(RpcEnum::rpc_server_poker_standup, [](NetPack& pack) {});
-			}
-			else if (tokens[0] == "STANDUP")
-			{
-				// No parameters needed
-				selfPlayer.Send(RpcEnum::rpc_server_poker_standup, [](NetPack& pack) {});
+				if (currentRoom < 0) { std::cout << "ERROR: Use USEROOM <id> first" << std::endl; continue; }
+				selfPlayer.Send(RpcEnum::rpc_server_poker_standup, [currentRoom](NetPack& pack) {
+					pack.WriteInt32(currentRoom);
+				});
 			}
 			else if (tokens[0] == "SETBLINDS" && tokens.size() >= 3)
 			{
-				int smallBlind = 0;
-				int bigBlind = 0;
-				try
-				{
-					smallBlind = std::stoi(tokens[1]);
-					bigBlind = std::stoi(tokens[2]);
-				}
-				catch (std::exception const& e)
-				{
-					std::cout << e.what() << std::endl;
-					return;
-				}
-				selfPlayer.Send(RpcEnum::rpc_server_poker_set_blinds, [smallBlind, bigBlind](NetPack& pack) {
+				if (currentRoom < 0) { std::cout << "ERROR: Use USEROOM <id> first" << std::endl; continue; }
+				int smallBlind = 0, bigBlind = 0;
+				try { smallBlind = std::stoi(tokens[1]); bigBlind = std::stoi(tokens[2]); }
+				catch (std::exception const& e) { std::cout << e.what() << std::endl; continue; }
+				selfPlayer.Send(RpcEnum::rpc_server_poker_set_blinds, [currentRoom, smallBlind, bigBlind](NetPack& pack) {
+					pack.WriteInt32(currentRoom);
 					pack.WriteInt32(smallBlind);
 					pack.WriteInt32(bigBlind);
-					});
+				});
 			}
-			// CHECK or CALL
 			else if (tokens[0] == "CHECK" || tokens[0] == "CALL")
 			{
-				uint8_t action = 0;  // CheckCall
-				selfPlayer.Send(RpcEnum::rpc_server_poker_action, [action](NetPack& pack) {
-					pack.WriteUInt8(action);
-					pack.WriteInt32(0);  // amount not used for check/call
-					});
+				if (currentRoom < 0) { std::cout << "ERROR: Use USEROOM <id> first" << std::endl; continue; }
+				selfPlayer.Send(RpcEnum::rpc_server_poker_action, [currentRoom](NetPack& pack) {
+					pack.WriteInt32(currentRoom);
+					pack.WriteUInt8(0);  // CheckCall
+					pack.WriteInt32(0);
+				});
 			}
-			// BET or RAISE
 			else if ((tokens[0] == "BET" || tokens[0] == "RAISE") && tokens.size() >= 2)
 			{
+				if (currentRoom < 0) { std::cout << "ERROR: Use USEROOM <id> first" << std::endl; continue; }
 				int amount = 0;
 				try { amount = std::stoi(tokens[1]); }
-				catch (std::exception const& e)
-				{
-					std::cout << e.what() << std::endl;
-					return;
-				}
-				uint8_t action = 1;  // BetRaise
-				selfPlayer.Send(RpcEnum::rpc_server_poker_action, [action, amount](NetPack& pack) {
-					pack.WriteUInt8(action);
+				catch (std::exception const& e) { std::cout << e.what() << std::endl; continue; }
+				selfPlayer.Send(RpcEnum::rpc_server_poker_action, [currentRoom, amount](NetPack& pack) {
+					pack.WriteInt32(currentRoom);
+					pack.WriteUInt8(1);  // BetRaise
 					pack.WriteInt32(amount);
-					});
+				});
 			}
-			// FOLD
 			else if (tokens[0] == "FOLD")
 			{
-				uint8_t action = 2;  // Fold
-				selfPlayer.Send(RpcEnum::rpc_server_poker_action, [action](NetPack& pack) {
-					pack.WriteUInt8(action);
+				if (currentRoom < 0) { std::cout << "ERROR: Use USEROOM <id> first" << std::endl; continue; }
+				selfPlayer.Send(RpcEnum::rpc_server_poker_action, [currentRoom](NetPack& pack) {
+					pack.WriteInt32(currentRoom);
+					pack.WriteUInt8(2);  // Fold
 					pack.WriteInt32(0);
-					});
+				});
 			}
-			// help and error section
+			// ========== Help ==========
 			else if (tokens[0] == "HELP")
 			{
 				if (tokens.size() == 2)
@@ -259,18 +254,22 @@ int main(int* args)
 				}
 				else
 				{
-					std::cout << "Available help topics:" << std::endl;
-					std::cout << "		-GENERIC" << std::endl;
-					std::cout << "		-HOLDEM" << std::endl;
+					std::cout << "Available commands:" << std::endl;
+					std::cout << "  HELP -GENERIC    - General commands" << std::endl;
+					std::cout << "  HELP -HOLDEM     - Poker commands" << std::endl;
 				}
 			}
+			// ========== Error handling ==========
 			else if (tokens[0] == "LOGIN" || tokens[0] == "REGISTER" || tokens[0] == "SETNAME" ||
-				tokens[0] == "SETLANG" || tokens[0] == "TOROOM")
+				tokens[0] == "SETLANG" || tokens[0] == "TOROOM" || tokens[0] == "LEAVEROOM" ||
+				tokens[0] == "MAKEROOM" || tokens[0] == "USEROOM")
 			{
-				std::cout << "ERROR INPUT: " << input << std::endl;
+				std::cout << "ERROR: Missing arguments for " << tokens[0] << std::endl;
 			}
+			// ========== Send text message ==========
 			else
 			{
+				if (currentRoom < 0) { std::cout << "ERROR: Use USEROOM <id> first to send messages" << std::endl; continue; }
 				std::cout << "SENDING MSG: " << input << std::endl;
 				auto msg = input;
 				if (input.size() >= 4)
@@ -287,10 +286,12 @@ int main(int* args)
 						msg = input.substr(4, input.length() - 4);
 					}
 				}
-				selfPlayer.Send(RpcEnum::rpc_server_send_text, [msg](NetPack& pack) { pack.WriteString(msg); });
+				selfPlayer.Send(RpcEnum::rpc_server_send_text, [currentRoom, msg](NetPack& pack) {
+					pack.WriteInt32(currentRoom);
+					pack.WriteString(msg);
+				});
 				waitingReturn = true;
 			}
-
 		}
 	};
 

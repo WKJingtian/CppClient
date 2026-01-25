@@ -2,16 +2,7 @@
 #include <queue>
 #include <thread>
 #include <mutex>
-
-enum Language : byte
-{
-	English = 0,
-	Chinese = 1,
-	Italian = 2,
-	Japanese = 3,
-	Franch = 4,
-	Spanish = 5,
-};
+#include "Utils/enum.h"
 
 class AudioCenter
 {

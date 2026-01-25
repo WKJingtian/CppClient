@@ -21,7 +21,7 @@
     <ClCompile Include="Net\NetPack.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Net\Player.cpp">
+    <ClCompile Include="Player\Player.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Audio\AudioCenter.cpp">
@@ -39,6 +39,12 @@
     <ClCompile Include="Game\HoldemPokerGame.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Helper\HelpString.h">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Player\PlayerInfo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">
@@ -50,7 +56,7 @@
     <ClInclude Include="Net\RpcEnum.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Net\Player.h">
+    <ClInclude Include="Player\Player.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Audio\AudioCenter.h">
@@ -77,5 +83,14 @@
     <ClInclude Include="Game\HoldemPokerGame.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Player\PlayerInfo.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\enum.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Python\python311._pth" />
   </ItemGroup>
 </Project>

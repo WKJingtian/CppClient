@@ -31,7 +31,7 @@
 
 #include "Net/NetPack.h"
 #include "Net/NetPackHandler.h"
-#include "Net/Player.h"
+#include "Player/Player.h"
 #include "Audio/AudioCenter.h"
 
 #include "Helper/HelpString.h"
