@@ -46,7 +46,7 @@ void Player::Delete(int errCode)
 {
 	if (m_deleted) return;
 	m_deleted = true;
-	std::cout << "delete player(err " << errCode << ")" << std::endl;
+	Console::Out() << "delete player(err " << errCode << ")" << std::endl;
 	if (m_recvThread.joinable()) m_recvThread.detach();
 	shutdown(m_socket, SD_SEND);
 	closesocket(m_socket);

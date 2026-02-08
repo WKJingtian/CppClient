@@ -166,6 +166,7 @@
     <ClCompile Include="Net\NetPackHandler.cpp" />
     <ClCompile Include="Player\Player.cpp" />
     <ClCompile Include="Player\PlayerInfo.cpp" />
+    <ClCompile Include="Utils\Console.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Audio\AudioCenter.h" />
@@ -181,6 +182,7 @@
     <ClInclude Include="Net\RpcError.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Player\PlayerInfo.h" />
+    <ClInclude Include="Utils\Console.h" />
     <ClInclude Include="Utils\enum.h" />
   </ItemGroup>
   <ItemGroup>

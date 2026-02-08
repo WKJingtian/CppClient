@@ -35,6 +35,7 @@
 #include "Audio/AudioCenter.h"
 
 #include "Helper/HelpString.h"
+#include "Utils/Console.h"
 
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
 #ifndef WIN32_LEAN_AND_MEAN

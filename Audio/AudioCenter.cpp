@@ -1,4 +1,4 @@
-﻿#include "pch.h"
+#include "pch.h"
 #include "AudioCenter.h"
 
 AudioCenter& AudioCenter::Inst()
@@ -36,7 +36,7 @@ void AudioCenter::PlayVoiceMsg()
 	PyConfig_Clear(&config);
 
 	if (PyStatus_Exception(status)) {
-		std::cerr << "embeded python init failed\n";
+		Console::Err() << "embeded python init failed\n";
 		PyErr_Print();
 		Py_ExitStatusException(status);
 	}
@@ -47,7 +47,7 @@ void AudioCenter::PlayVoiceMsg()
 	PyObject* pModule = PyImport_Import(pName);
 	if (pModule == NULL)
 	{
-		std::cerr << "py module is null\n";
+		Console::Err() << "py module is null\n";
 		PyErr_Print();
 	}
 	Py_DECREF(pName);

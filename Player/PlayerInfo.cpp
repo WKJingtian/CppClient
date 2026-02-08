@@ -110,8 +110,8 @@ void PlayerInfo::ReadInfo(NetPack& src)
 
 void PlayerInfo::Print()
 {
-	std::cout << "player info with _id=" << GetID() << std::endl;
-	std::cout << "\t nickname: " << GetName() << std::endl;
-	std::cout << "\t language: " << (int)GetLanguage() << std::endl;
-	std::cout << "\t chip: " << GetChip() << std::endl;
+	Console::Out() << "player info with _id=" << GetID() << std::endl;
+	Console::Out() << "\t nickname: " << GetName() << std::endl;
+	Console::Out() << "\t language: " << (int)GetLanguage() << std::endl;
+	Console::Out() << "\t chip: " << GetChip() << std::endl;
 }

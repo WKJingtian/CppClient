@@ -39,12 +39,12 @@ int NetPackHandler::DoOneTask()
 		}
 		else
 			AudioCenter::Inst().AddVoiceMsg(msg.c_str(), speakerInfo.GetLanguage());
-		std::cout << speakerInfo.GetName() << ": " << msg << std::endl;
+		Console::Out() << speakerInfo.GetName() << ": " << msg << std::endl;
 	}
 	else if (task.MsgType() == RpcEnum::rpc_client_log_in)
 	{
 		// Format: id:u32, nickname:string, language:u32
-		std::cout << "log in success" << std::endl;
+		Console::Out() << "log in success" << std::endl;
 		auto playerInfo = PlayerInfo(task);
 		playerInfo.Print();
 	}
@@ -57,7 +57,7 @@ int NetPackHandler::DoOneTask()
 			int roomIdx = task.ReadInt32();
 			uint16_t roomType = task.ReadUInt16();
 			uint32_t userCnt = task.ReadUInt32();
-			std::cout << "Room " << roomIdx << " (Type: " << roomType << "): " << std::endl;
+			Console::Out() << "Room " << roomIdx << " (Type: " << roomType << "): " << std::endl;
 			for (uint32_t ii = 0; ii < userCnt; ii++)
 			{
 				auto memberInfo = PlayerInfo(task);
@@ -69,45 +69,45 @@ int NetPackHandler::DoOneTask()
 	{
 		// Format: count:u32, [name:string, lang:u8]...
 		uint32_t userCnt = task.ReadUInt32();
-		std::cout << "userCnt: " << userCnt << std::endl;
+		Console::Out() << "userCnt: " << userCnt << std::endl;
 		for (uint32_t i = 0; i < userCnt; i++)
 		{
-			std::cout << "\t" << task.ReadString() << std::endl;
+			Console::Out() << "\t" << task.ReadString() << std::endl;
 			task.ReadUInt8(); // language
 		}
 	}
 	else if (task.MsgType() == RpcEnum::rpc_client_goto_room)
 	{
 		// Format: roomId:i32
-		std::cout << "Joined room " << task.ReadInt32() << std::endl;
+		Console::Out() << "Joined room " << task.ReadInt32() << std::endl;
 	}
 	else if (task.MsgType() == RpcEnum::rpc_client_leave_room)
 	{
 		// Format: roomId:i32
-		std::cout << "Left room " << task.ReadInt32() << std::endl;
+		Console::Out() << "Left room " << task.ReadInt32() << std::endl;
 	}
 	else if (task.MsgType() == RpcEnum::rpc_client_get_my_rooms)
 	{
 		// Format: count:u32, [roomId:i32, roomType:u16]...
 		uint32_t roomCnt = task.ReadUInt32();
-		std::cout << "You are in " << roomCnt << " room(s):" << std::endl;
+		Console::Out() << "You are in " << roomCnt << " room(s):" << std::endl;
 		for (uint32_t i = 0; i < roomCnt; i++)
 		{
 			int roomId = task.ReadInt32();
 			uint16_t roomType = task.ReadUInt16();
-			std::cout << "\tRoom " << roomId << " (Type: " << roomType << ")" << std::endl;
+			Console::Out() << "\tRoom " << roomId << " (Type: " << roomType << ")" << std::endl;
 		}
 	}
 	else if (task.MsgType() == RpcEnum::rpc_client_create_room)
 	{
 		// Format: roomId:i32
-		std::cout << "Created room " << task.ReadInt32() << std::endl;
+		Console::Out() << "Created room " << task.ReadInt32() << std::endl;
 	}
 	else if (task.MsgType() == RpcEnum::rpc_client_error_respond)
 	{
 		// Format: errCode:u16
 		auto errCode = task.ReadUInt16();
-		std::cout << "Server sent error code: " << errCode << std::endl;
+		Console::Out() << "Server sent error code: " << errCode << std::endl;
 	}
 	else if (task.MsgType() == RpcEnum::rpc_client_tick)
 	{
@@ -128,19 +128,19 @@ int NetPackHandler::DoOneTask()
 		const auto& community = localGame.GetCommunity();
 		const auto& seats = localGame.GetSeats();
 
-		std::cout << "Room " << roomId << " - Stage: " << (int)stage
+		Console::Out() << "Room " << roomId << " - Stage: " << (int)stage
 			<< ", Pot: " << pot
 			<< ", Acting: " << actingPlayer << std::endl;
 
-		std::cout << "  Community: ";
+		Console::Out() << "  Community: ";
 		for (const auto& c : community)
-			if (c.IsValid()) std::cout << c.ToString() << " ";
-		std::cout << std::endl;
+			if (c.IsValid()) Console::Out() << c.ToString() << " ";
+		Console::Out() << std::endl;
 
 		for (const Seat& seat : seats)
 		{
 			if (seat.playerId < 0) continue;
-			std::cout << "  Seat " << seat.seatIndex
+			Console::Out() << "  Seat " << seat.seatIndex
 				<< ": Player " << seat.playerId
 				<< ", Chips: " << seat.chips
 				<< (seat.inHand ? " [IN HAND]" : "")
@@ -150,7 +150,7 @@ int NetPackHandler::DoOneTask()
 
 			if (seat.hole[0].IsValid())
 			{
-				std::cout << "    Hole: " << seat.hole[0].ToString()
+				Console::Out() << "    Hole: " << seat.hole[0].ToString()
 					<< " " << seat.hole[1].ToString() << std::endl;
 			}
 		}
@@ -164,12 +164,12 @@ int NetPackHandler::DoOneTask()
 		int bigBlind = task.ReadInt32();
 		int walletBalance = task.ReadInt32();
 
-		std::cout << "Sat down at seat " << actualSeatIdx << std::endl;
-		std::cout << "  Min buy-in: " << minBuyin
+		Console::Out() << "Sat down at seat " << actualSeatIdx << std::endl;
+		Console::Out() << "  Min buy-in: " << minBuyin
 			<< ", Your wallet: " << walletBalance << std::endl;
 
 		if (bigBlind < 0)
-			std::cout << "  Warning: Blinds not configured yet!" << std::endl;
+			Console::Out() << "  Warning: Blinds not configured yet!" << std::endl;
 	}
 	else if (task.MsgType() == RpcEnum::rpc_client_poker_buyin)
 	{
@@ -181,17 +181,17 @@ int NetPackHandler::DoOneTask()
 		switch (result)
 		{
 		case HoldemPokerGame::BuyInResult::Success:
-			std::cout << "Buy-in successful! Table chips: " << tableChips
+			Console::Out() << "Buy-in successful! Table chips: " << tableChips
 				<< ", Wallet: " << walletChips << std::endl;
 			break;
 		case HoldemPokerGame::BuyInResult::BelowMinimum:
-			std::cout << "Buy-in failed: Below minimum amount" << std::endl;
+			Console::Out() << "Buy-in failed: Below minimum amount" << std::endl;
 			break;
 		case HoldemPokerGame::BuyInResult::PlayerNotFound:
-			std::cout << "Buy-in failed: Player not found at table" << std::endl;
+			Console::Out() << "Buy-in failed: Player not found at table" << std::endl;
 			break;
 		case HoldemPokerGame::BuyInResult::AlreadyInHand:
-			std::cout << "Buy-in failed: Already in hand" << std::endl;
+			Console::Out() << "Buy-in failed: Already in hand" << std::endl;
 			break;
 		}
 	}
@@ -199,7 +199,7 @@ int NetPackHandler::DoOneTask()
 	{
 		// Format: success:u8
 		bool success = task.ReadUInt8() != 0;
-		std::cout << (success ? "Stood up from table" : "Failed to stand up") << std::endl;
+		Console::Out() << (success ? "Stood up from table" : "Failed to stand up") << std::endl;
 	}
 	else if (task.MsgType() == RpcEnum::rpc_client_poker_set_blinds)
 	{
@@ -212,14 +212,14 @@ int NetPackHandler::DoOneTask()
 		switch (result)
 		{
 		case HoldemPokerGame::SetBlindsResult::Success:
-			std::cout << "Blinds set: " << smallBlind << "/" << bigBlind
+			Console::Out() << "Blinds set: " << smallBlind << "/" << bigBlind
 				<< ", Min buy-in: " << minBuyin << std::endl;
 			break;
 		case HoldemPokerGame::SetBlindsResult::GameInProgress:
-			std::cout << "Cannot change blinds: Game in progress" << std::endl;
+			Console::Out() << "Cannot change blinds: Game in progress" << std::endl;
 			break;
 		case HoldemPokerGame::SetBlindsResult::InvalidValue:
-			std::cout << "Invalid blind values" << std::endl;
+			Console::Out() << "Invalid blind values" << std::endl;
 			break;
 		}
 	}
@@ -230,26 +230,26 @@ int NetPackHandler::DoOneTask()
 		HandResult result;
 		result.Read(task);
 
-		std::cout << "=== Hand Result (Room " << roomId << ") ===" << std::endl;
-		std::cout << "Total pot: " << result.totalPot << std::endl;
-		std::cout << "Community: ";
+		Console::Out() << "=== Hand Result (Room " << roomId << ") ===" << std::endl;
+		Console::Out() << "Total pot: " << result.totalPot << std::endl;
+		Console::Out() << "Community: ";
 		for (const auto& c : result.communityCards)
-			if (c.IsValid()) std::cout << c.ToString() << " ";
-		std::cout << std::endl;
+			if (c.IsValid()) Console::Out() << c.ToString() << " ";
+		Console::Out() << std::endl;
 
 		for (const auto& pr : result.playerResults)
 		{
-			std::cout << "  Player " << pr.playerId << ": ";
+			Console::Out() << "  Player " << pr.playerId << ": ";
 			if (pr.folded)
-				std::cout << "FOLDED";
+				Console::Out() << "FOLDED";
 			else
 			{
-				std::cout << pr.holeCards[0].ToString() << " " << pr.holeCards[1].ToString()
+				Console::Out() << pr.holeCards[0].ToString() << " " << pr.holeCards[1].ToString()
 					<< " (Rank: " << pr.handRank << ")";
 			}
 			if (pr.chipsWon > 0)
-				std::cout << " WON " << pr.chipsWon;
-			std::cout << std::endl;
+				Console::Out() << " WON " << pr.chipsWon;
+			Console::Out() << std::endl;
 		}
 	}
 

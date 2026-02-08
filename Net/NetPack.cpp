@@ -20,7 +20,7 @@ NetPack::NetPack(uint8_t* stream)
 
 void NetPack::DebugPrint()
 {
-	std::cout << "[NETPACK REPORT] typ: " << (uint16_t)m_enumType << "; size: " << m_size << std::endl;
+	Console::Out() << "[NETPACK REPORT] typ: " << (uint16_t)m_enumType << "; size: " << m_size << std::endl;
 }
 
 //read
