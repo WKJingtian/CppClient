@@ -4,6 +4,9 @@
 #include <vector>
 #include <algorithm>
 
+#undef min
+#undef max
+
 class HandEvaluator
 {
 public:
@@ -131,7 +134,7 @@ public:
 		// Flush
 		if (flushSuit >= 0)
 		{
-			std::vector<int> kickers(flushRanks.begin(), flushRanks.begin() + min((size_t)5, flushRanks.size()));
+			std::vector<int> kickers(flushRanks.begin(), flushRanks.begin() + std::min((size_t)5, flushRanks.size()));
 			return Score(HandRank::Flush, kickers);
 		}
 

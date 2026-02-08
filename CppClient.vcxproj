@@ -160,6 +160,7 @@
     <ClCompile Include="Game\GameItem\Card.cpp" />
     <ClCompile Include="Game\GameItem\Seat.cpp" />
     <ClCompile Include="Game\HoldemPokerGame.cpp" />
+    <ClCompile Include="Game\HoldemTableSnapshot.cpp" />
     <ClCompile Include="Helper\HelpString.h" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Net\NetPack.cpp" />
@@ -175,6 +176,7 @@
     <ClInclude Include="Game\GameItem\HandEvaluator.h" />
     <ClInclude Include="Game\GameItem\Seat.h" />
     <ClInclude Include="Game\HoldemPokerGame.h" />
+    <ClInclude Include="Game\HoldemTableSnapshot.h" />
     <ClInclude Include="Net\NetPack.h" />
     <ClInclude Include="Net\NetPackHandler.h" />
     <ClInclude Include="Player\Player.h" />

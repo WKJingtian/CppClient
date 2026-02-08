@@ -89,6 +89,10 @@ namespace HelpStrings
     RAISE <amount>       Raise to specified amount
     FOLD                 Fold your hand
 
+  BOT ACTIONS:
+    ADDHOLDEMBOT         Add a bot
+    RMHOLDEMBOT <seat>   Remove bot on seat(if there is a bot)
+
 --------------------------------------------------------------------------------
 [GAME STAGES]
 --------------------------------------------------------------------------------

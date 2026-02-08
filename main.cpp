@@ -37,8 +37,8 @@ int main(int* args)
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_protocol = IPPROTO_TCP;
 	// when testing using 127.0.0.1
-	//iResult = getaddrinfo("127.0.0.1", serverPort.c_str(), &hints, &result);
-	iResult = getaddrinfo("43.128.29.250", serverPort.c_str(), &hints, &result);
+	iResult = getaddrinfo("127.0.0.1", serverPort.c_str(), &hints, &result);
+	//iResult = getaddrinfo("43.128.29.250", serverPort.c_str(), &hints, &result);
 	if (iResult != 0) {
 		Console::Err() << "getaddrinfo failed: " << iResult << std::endl;
 		WSACleanup();
@@ -242,6 +242,24 @@ int main(int* args)
 					pack.WriteInt32(currentRoom);
 					pack.WriteUInt8(1);  // BetRaise
 					pack.WriteInt32(amount);
+				});
+			}
+			else if (tokens[0] == "ADDHOLDEMBOT")
+			{
+				if (currentRoom < 0) { Console::Out() << "ERROR: Use USEROOM <id> first" << std::endl; continue; }
+				selfPlayer.Send(RpcEnum::rpc_server_poker_add_bot, [currentRoom](NetPack& pack) { 
+					pack.WriteInt32(currentRoom); 
+				});
+			}
+			else if (tokens[0] == "RMHOLDEMBOT" && tokens.size() == 2)
+			{
+				if (currentRoom < 0) { Console::Out() << "ERROR: Use USEROOM <id> first" << std::endl; continue; }
+				int seatID = 0;
+				try { seatID = std::stoi(tokens[1]); }
+				catch (std::exception const& e) { Console::Out() << e.what() << std::endl; continue; }
+				selfPlayer.Send(RpcEnum::rpc_server_poker_kick_bot, [currentRoom, seatID](NetPack& pack) { 
+					pack.WriteInt32(currentRoom); 
+					pack.WriteInt32(seatID);
 				});
 			}
 			else if (tokens[0] == "FOLD")
