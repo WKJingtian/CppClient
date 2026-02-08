@@ -31,7 +31,7 @@ int NetPackHandler::DoOneTask()
 			switch (speakerInfo.GetLanguage())
 			{
 			case Chinese:
-				saidString = "˵";
+				saidString = "?";
 				break;
 			default: break;
 			}
@@ -52,6 +52,7 @@ int NetPackHandler::DoOneTask()
 	{
 		// Format: count:u32, [roomId:i32, roomType:u16, userCnt:u32, [name:string, lang:u8]...]...
 		uint32_t roomCnt = task.ReadUInt32();
+		Console::Out() << "roomCnt: " << roomCnt << std::endl;
 		for (uint32_t i = 0; i < roomCnt; i++)
 		{
 			int roomIdx = task.ReadInt32();
@@ -72,8 +73,8 @@ int NetPackHandler::DoOneTask()
 		Console::Out() << "userCnt: " << userCnt << std::endl;
 		for (uint32_t i = 0; i < userCnt; i++)
 		{
-			Console::Out() << "\t" << task.ReadString() << std::endl;
-			task.ReadUInt8(); // language
+			auto info = PlayerInfo(task);
+			info.Print();
 		}
 	}
 	else if (task.MsgType() == RpcEnum::rpc_client_goto_room)
@@ -251,6 +252,17 @@ int NetPackHandler::DoOneTask()
 				Console::Out() << " WON " << pr.chipsWon;
 			Console::Out() << std::endl;
 		}
+	}
+	else if (task.MsgType() == RpcEnum::rpc_client_ping)
+	{
+		const int64_t UpLatencyMs = task.ReadInt64();
+		const int64_t serverSendMs = task.ReadInt64();
+		const auto nowMs = std::chrono::duration_cast<std::chrono::milliseconds>(
+			std::chrono::system_clock::now().time_since_epoch()).count();
+		const int64_t DnLatencyMs = nowMs - serverSendMs;
+		Console::Out() << "[PING RESULT]:" << std::endl;
+		Console::Out() << '\t' << "UP LATENCY: " << UpLatencyMs << " Ms"  << std::endl;
+		Console::Out() << '\t' << "DN LATENCY: " << DnLatencyMs << " Ms" << std::endl;
 	}
 
 	return 0;

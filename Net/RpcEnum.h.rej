@@ -1,0 +1,12 @@
+diff a/Net/RpcEnum.h b/Net/RpcEnum.h	(rejected hunks)
+@@ -2,8 +2,8 @@
+ #include <iostream>
+ 
+ // maybe do an automated-generation process here
+-// server开头指的是发送到server的rpc
+-// client开头指的是发送到client的rpc
++// server��ͷָ���Ƿ��͵�server��rpc
++// client��ͷָ���Ƿ��͵�client��rpc
+ enum RpcEnum : std::uint16_t
+ {
+ 	rpc_connect,

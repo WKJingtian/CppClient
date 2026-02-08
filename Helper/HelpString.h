@@ -8,7 +8,9 @@ namespace HelpStrings
                         CHAT + ROOM COMMANDS - HELP
 ================================================================================
 
+--------------------------------------------------------------------------------
 [ACCOUNT]
+--------------------------------------------------------------------------------
   REGISTER <name> <password>   Create a new account
   LOGIN <id> <password>        Log in with user id
   SETNAME <name>               Change your display name
@@ -43,6 +45,7 @@ namespace HelpStrings
 --------------------------------------------------------------------------------
   HELP -GENERIC                Show this help
   HELP -HOLDEM                 Show poker help
+  PING                         Ping the server
   QUIT                         Close the client
 
 ================================================================================

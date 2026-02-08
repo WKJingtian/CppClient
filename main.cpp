@@ -97,6 +97,12 @@ int main(int* args)
 				AudioCenter::Inst().m_mute = true;
 			else if (input == "UNMUTE\0")
 				AudioCenter::Inst().m_mute = false;
+			else if (input == "PING\0")
+			{
+				const auto nowMs = std::chrono::duration_cast<std::chrono::milliseconds>(
+					std::chrono::system_clock::now().time_since_epoch()).count();
+				selfPlayer.Send(RpcEnum::rpc_server_ping, [nowMs](NetPack& pack) { pack.WriteInt64(nowMs); });
+			}
 			else if (tokens[0] == "LOGIN" && tokens.size() == 3)
 			{
 				auto idStr = tokens[1];

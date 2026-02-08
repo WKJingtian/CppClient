@@ -11,11 +11,15 @@ class NetPack
 	uint8_t m_content[NET_PACK_MAX_LEN];
 public:
 	NetPack() = delete;
-	NetPack(RpcEnum typ);      // used to write & send
-	NetPack(uint8_t* stream);  // used to receive & read
-	const char* GetContent() { return (char*)m_content; }
-	size_t Length() { return m_size; }
-	RpcEnum MsgType() { return m_enumType; }
+	NetPack(RpcEnum typ);               // used to write & send
+	NetPack(uint8_t* stream);           // used to receive & read
+	NetPack(NetPack&& src) noexcept;    // move to different thread
+
+	void operator = (NetPack&& src) noexcept;
+
+	const char* GetContent();
+	size_t Length();
+	RpcEnum MsgType();
 
 	//read
 	float ReadFloat();
@@ -23,6 +27,7 @@ public:
 	int8_t ReadInt8();
 	int16_t ReadInt16();
 	int32_t ReadInt32();
+	int64_t ReadInt64();
 	uint8_t ReadUInt8();
 	uint16_t ReadUInt16();
 	uint32_t ReadUInt32();
@@ -33,6 +38,7 @@ public:
 	void WriteInt8(int8_t val, int atPos = -1);
 	void WriteInt16(int16_t val, int atPos = -1);
 	void WriteInt32(int32_t val, int atPos = -1);
+	void WriteInt64(int64_t val, int atPos = -1);
 	void WriteUInt8(uint8_t val, int atPos = -1);
 	void WriteUInt16(uint16_t val, int atPos = -1);
 	void WriteUInt32(uint32_t val, int atPos = -1);

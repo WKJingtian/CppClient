@@ -1,9 +1,9 @@
-ï»¿#pragma once
+#pragma once
 #include <iostream>
 
 // maybe do an automated-generation process here
-// serverå¼€å¤´æŒ‡çš„æ˜¯å‘é€åˆ°serverçš„rpc
-// clientå¼€å¤´æŒ‡çš„æ˜¯å‘é€åˆ°clientçš„rpc
+// server¿ªÍ·Ö¸µÄÊÇ·¢ËÍµ½serverµÄrpc
+// client¿ªÍ·Ö¸µÄÊÇ·¢ËÍµ½clientµÄrpc
 enum RpcEnum : std::uint16_t
 {
 	rpc_connect,
@@ -52,6 +52,8 @@ enum RpcEnum : std::uint16_t
 	rpc_client_poker_standup,
 	rpc_server_poker_set_blinds,
 	rpc_client_poker_set_blinds,
+	rpc_server_ping,
+	rpc_client_ping,
 
 	INVALID,
 };
