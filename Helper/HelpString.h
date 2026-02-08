@@ -4,17 +4,48 @@
 namespace HelpStrings
 {
     static const std::string GENERIC = R"(
-========== WKR's chatting room user guide ==========
-SETNAME {yourname}: change your name 
-SETLANG {language}: change the language of your text. currently, there are only en (English) and cn (Chinese)
-MUTE: to mute the chat room
-UNMUTE: unmute the chat room
-USERLIST: check all online users
-MAKEROOM {roomId}: room id has to be a number
-TOROOM {roomId}: switch to a different room, room id has to be a number
-[{language}] {thingsToSay}: say something to other users in the same room with given language
-    for example: \"[en] hello\" is to say hello in english
-{thingsToSay}: say something with previously set language
+================================================================================
+                        CHAT + ROOM COMMANDS - HELP
+================================================================================
+
+[ACCOUNT]
+  REGISTER <name> <password>   Create a new account
+  LOGIN <id> <password>        Log in with user id
+  SETNAME <name>               Change your display name
+  SETLANG <en|cn>              Set default chat language
+
+--------------------------------------------------------------------------------
+[ROOMS]
+--------------------------------------------------------------------------------
+  MAKEROOM <type>              Create room (0=Hall, 1=Chat, 2=Poker)
+  ROOMLIST                     List public rooms
+  MYROOMS                      List rooms you are in
+  TOROOM <id>                  Join a room
+  LEAVEROOM <id>               Leave a room
+  USEROOM <id>                 Set active room for chat/poker commands
+
+--------------------------------------------------------------------------------
+[CHAT]
+--------------------------------------------------------------------------------
+  <text>                       Send message to active room
+  [en] <text>                  Send and set language to English
+  [cn] <text>                  Send and set language to Chinese
+  Note: Use USEROOM <id> before sending messages.
+
+--------------------------------------------------------------------------------
+[AUDIO]
+--------------------------------------------------------------------------------
+  MUTE                         Mute chat audio
+  UNMUTE                       Unmute chat audio
+
+--------------------------------------------------------------------------------
+[OTHER]
+--------------------------------------------------------------------------------
+  HELP -GENERIC                Show this help
+  HELP -HOLDEM                 Show poker help
+  QUIT                         Close the client
+
+================================================================================
 )";
 
     static const std::string HOLDEM = R"(
