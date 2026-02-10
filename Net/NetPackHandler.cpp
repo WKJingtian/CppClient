@@ -147,6 +147,9 @@ int NetPackHandler::DoOneTask()
 				<< (seat.inHand ? " [IN HAND]" : "")
 				<< (seat.folded ? " [FOLDED]" : "")
 				<< (seat.sittingOut ? " [SITTING OUT]" : "")
+				<< (seat.seatIndex == localGame.GetBigBlindSeatIndex() ? " [BB]" : "")
+				<< (seat.seatIndex == localGame.GetSmallBlindSeatIndex() ? " [SB]" : "")
+				<< (seat.folded ? " [FOLDED]" : "")
 				<< std::endl;
 
 			if (seat.hole[0].IsValid())
@@ -252,6 +255,7 @@ int NetPackHandler::DoOneTask()
 				Console::Out() << " WON " << pr.chipsWon;
 			Console::Out() << std::endl;
 		}
+		Console::Out() << "=== === === === === === === ===" << std::endl;
 	}
 	else if (task.MsgType() == RpcEnum::rpc_client_ping)
 	{

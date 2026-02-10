@@ -4,6 +4,7 @@
 namespace
 {
 	constexpr const char* kPromptA = "> ";
+	constexpr size_t kHistoryNone = static_cast<size_t>(-1);
 }
 
 Console& Console::Instance()
@@ -57,6 +58,8 @@ Console::Console()
 	m_maxHistoryLines(1000),
 	m_scrollOffset(0),
 	m_followTail(true),
+	m_cmdHistoryIndex(kHistoryNone),
+	m_maxCmdHistory(200),
 	m_outBuf(this, false),
 	m_errBuf(this, true),
 	m_outStream(&m_outBuf),
@@ -267,6 +270,22 @@ void Console::HandleKeyEvent(const KEY_EVENT_RECORD& key)
 	case VK_RETURN:
 	{
 		std::wstring line = m_inputLine;
+		if (!line.empty())
+		{
+			for (auto it = m_cmdHistory.begin(); it != m_cmdHistory.end(); ++it)
+			{
+				if (*it == line)
+				{
+					m_cmdHistory.erase(it);
+					break;
+				}
+			}
+			m_cmdHistory.push_back(line);
+			if (m_cmdHistory.size() > m_maxCmdHistory)
+				m_cmdHistory.pop_front();
+		}
+		m_cmdHistoryIndex = kHistoryNone;
+		m_cmdDraft.clear();
 		m_inputLine.clear();
 		m_caretPos = 0;
 		QueueCommand(line);
@@ -284,6 +303,52 @@ void Console::HandleKeyEvent(const KEY_EVENT_RECORD& key)
 	case VK_END:
 		ScrollToBottom();
 		return;
+	case VK_UP:
+	{
+		bool ctrlDown = (key.dwControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)) != 0;
+		if (ctrlDown)
+		{
+			AdjustScroll(1);
+			return;
+		}
+		if (m_cmdHistory.empty())
+			break;
+		if (m_cmdHistoryIndex == kHistoryNone)
+		{
+			m_cmdDraft = m_inputLine;
+			m_cmdHistoryIndex = m_cmdHistory.size() - 1;
+		}
+		else if (m_cmdHistoryIndex > 0)
+		{
+			--m_cmdHistoryIndex;
+		}
+		m_inputLine = m_cmdHistory[m_cmdHistoryIndex];
+		m_caretPos = m_inputLine.size();
+		break;
+	}
+	case VK_DOWN:
+	{
+		bool ctrlDown = (key.dwControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)) != 0;
+		if (ctrlDown)
+		{
+			AdjustScroll(-1);
+			return;
+		}
+		if (m_cmdHistoryIndex == kHistoryNone)
+			break;
+		if (m_cmdHistoryIndex + 1 < m_cmdHistory.size())
+		{
+			++m_cmdHistoryIndex;
+			m_inputLine = m_cmdHistory[m_cmdHistoryIndex];
+		}
+		else
+		{
+			m_cmdHistoryIndex = kHistoryNone;
+			m_inputLine = m_cmdDraft;
+		}
+		m_caretPos = m_inputLine.size();
+		break;
+	}
 	default:
 		if (key.uChar.UnicodeChar >= 0x20)
 		{

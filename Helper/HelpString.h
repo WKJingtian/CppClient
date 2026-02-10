@@ -87,6 +87,7 @@ namespace HelpStrings
     CALL                 Call current bet
     BET <amount>         Place a bet
     RAISE <amount>       Raise to specified amount
+    ALLIN                All in
     FOLD                 Fold your hand
 
   BOT ACTIONS:

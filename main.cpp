@@ -232,6 +232,15 @@ int main(int* args)
 					pack.WriteInt32(0);
 				});
 			}
+			else if (tokens[0] == "ALLIN")
+			{
+				if (currentRoom < 0) { Console::Out() << "ERROR: Use USEROOM <id> first" << std::endl; continue; }
+				selfPlayer.Send(RpcEnum::rpc_server_poker_action, [currentRoom](NetPack& pack) {
+					pack.WriteInt32(currentRoom);
+					pack.WriteUInt8(1);  // BetRaise
+					pack.WriteInt32(0x0fffffff); // Max Value
+				});
+			}
 			else if ((tokens[0] == "BET" || tokens[0] == "RAISE") && tokens.size() >= 2)
 			{
 				if (currentRoom < 0) { Console::Out() << "ERROR: Use USEROOM <id> first" << std::endl; continue; }

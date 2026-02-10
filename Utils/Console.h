@@ -113,6 +113,11 @@ private:
 	size_t m_scrollOffset;
 	bool m_followTail;
 
+	std::deque<std::wstring> m_cmdHistory;
+	size_t m_cmdHistoryIndex;
+	std::wstring m_cmdDraft;
+	size_t m_maxCmdHistory;
+
 	ConsoleStreamBuf m_outBuf;
 	ConsoleStreamBuf m_errBuf;
 	std::ostream m_outStream;
