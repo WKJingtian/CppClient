@@ -18,12 +18,12 @@ public:
 	uint8_t Suit() const { return _suit; }
 	bool IsValid() const { return _rank >= RANK_MIN && _rank <= RANK_MAX && _suit < SUIT_COUNT; }
 
-	std::string ToString() const
+	std::wstring ToString() const
 	{
-		static const char* ranks[] = { "","","2","3","4","5","6","7","8","9","T","J","Q","K","A" };
-		static const char* suits[] = { "spade","heart","diamond","club" };
-		if (!IsValid()) return "??";
-		return std::string(ranks[_rank]) + suits[_suit];
+		static const wchar_t* ranks[] = { L"",L"",L"2",L"3",L"4",L"5",L"6",L"7",L"8",L"9",L"T",L"J",L"Q",L"K",L"A" };
+		static const wchar_t* suits[] = { L"\x2660",L"\x2665",L"\x2666",L"\x2663" };
+		if (!IsValid()) return L"??";
+		return std::wstring(ranks[_rank]) + suits[_suit];
 	}
 
 	bool operator==(const Card& other) const { return _rank == other._rank && _suit == other._suit; }

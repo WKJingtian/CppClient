@@ -2,6 +2,9 @@
 #include "NetPackHandler.h"
 #include "Game/HoldemPokerGame.h"
 #include "Player/PlayerInfo.h"
+#include "Helper/GameElementPrinter.h"
+#include "ServerClass/Room.h"
+#include "Audio/AudioCenter.h"
 
 std::queue<NetPack> NetPackHandler::_taskList = std::queue<NetPack>();
 std::mutex NetPackHandler::_mutex{};
@@ -31,7 +34,7 @@ int NetPackHandler::DoOneTask()
 			switch (speakerInfo.GetLanguage())
 			{
 			case Chinese:
-				saidString = "?";
+				saidString = "˵";
 				break;
 			default: break;
 			}
@@ -46,7 +49,7 @@ int NetPackHandler::DoOneTask()
 		// Format: id:u32, nickname:string, language:u32
 		Console::Out() << "log in success" << std::endl;
 		auto playerInfo = PlayerInfo(task);
-		playerInfo.Print();
+		GameElementPrinter::Print(playerInfo);
 	}
 	else if (task.MsgType() == RpcEnum::rpc_client_print_room)
 	{
@@ -55,15 +58,8 @@ int NetPackHandler::DoOneTask()
 		Console::Out() << "roomCnt: " << roomCnt << std::endl;
 		for (uint32_t i = 0; i < roomCnt; i++)
 		{
-			int roomIdx = task.ReadInt32();
-			uint16_t roomType = task.ReadUInt16();
-			uint32_t userCnt = task.ReadUInt32();
-			Console::Out() << "Room " << roomIdx << " (Type: " << roomType << "): " << std::endl;
-			for (uint32_t ii = 0; ii < userCnt; ii++)
-			{
-				auto memberInfo = PlayerInfo(task);
-				memberInfo.Print();
-			}
+			auto room = Room(task);
+			GameElementPrinter::Print(room);
 		}
 	}
 	else if (task.MsgType() == RpcEnum::rpc_client_print_user)
@@ -74,7 +70,7 @@ int NetPackHandler::DoOneTask()
 		for (uint32_t i = 0; i < userCnt; i++)
 		{
 			auto info = PlayerInfo(task);
-			info.Print();
+			GameElementPrinter::Print(info);
 		}
 	}
 	else if (task.MsgType() == RpcEnum::rpc_client_goto_room)
@@ -96,7 +92,7 @@ int NetPackHandler::DoOneTask()
 		{
 			int roomId = task.ReadInt32();
 			uint16_t roomType = task.ReadUInt16();
-			Console::Out() << "\tRoom " << roomId << " (Type: " << roomType << ")" << std::endl;
+			Console::Out() << "\tRoom " << roomId << " (Type: " << Room::GetRoomTypeName((Room::RoomType)roomType) << ")" << std::endl;
 		}
 	}
 	else if (task.MsgType() == RpcEnum::rpc_client_create_room)
@@ -121,43 +117,7 @@ int NetPackHandler::DoOneTask()
 
 		HoldemPokerGame localGame;
 		localGame.ReadTable(task);
-
-		auto stage = localGame.GetStage();
-		int pot = localGame.GetTotalPot();
-		int actingPlayer = localGame.ActingPlayerId();
-
-		const auto& community = localGame.GetCommunity();
-		const auto& seats = localGame.GetSeats();
-
-		Console::Out() << "Room " << roomId << " - Stage: " << (int)stage
-			<< ", Pot: " << pot
-			<< ", Acting: " << actingPlayer << std::endl;
-
-		Console::Out() << "  Community: ";
-		for (const auto& c : community)
-			if (c.IsValid()) Console::Out() << c.ToString() << " ";
-		Console::Out() << std::endl;
-
-		for (const Seat& seat : seats)
-		{
-			if (seat.playerId < 0) continue;
-			Console::Out() << "  Seat " << seat.seatIndex
-				<< ": Player " << seat.playerId
-				<< ", Chips: " << seat.chips
-				<< (seat.inHand ? " [IN HAND]" : "")
-				<< (seat.folded ? " [FOLDED]" : "")
-				<< (seat.sittingOut ? " [SITTING OUT]" : "")
-				<< (seat.seatIndex == localGame.GetBigBlindSeatIndex() ? " [BB]" : "")
-				<< (seat.seatIndex == localGame.GetSmallBlindSeatIndex() ? " [SB]" : "")
-				<< (seat.folded ? " [FOLDED]" : "")
-				<< std::endl;
-
-			if (seat.hole[0].IsValid())
-			{
-				Console::Out() << "    Hole: " << seat.hole[0].ToString()
-					<< " " << seat.hole[1].ToString() << std::endl;
-			}
-		}
+		GameElementPrinter::Print(localGame, roomId);
 	}
 	else if (task.MsgType() == RpcEnum::rpc_client_sit_down)
 	{
@@ -233,29 +193,7 @@ int NetPackHandler::DoOneTask()
 		int roomId = task.ReadInt32();
 		HandResult result;
 		result.Read(task);
-
-		Console::Out() << "=== Hand Result (Room " << roomId << ") ===" << std::endl;
-		Console::Out() << "Total pot: " << result.totalPot << std::endl;
-		Console::Out() << "Community: ";
-		for (const auto& c : result.communityCards)
-			if (c.IsValid()) Console::Out() << c.ToString() << " ";
-		Console::Out() << std::endl;
-
-		for (const auto& pr : result.playerResults)
-		{
-			Console::Out() << "  Player " << pr.playerId << ": ";
-			if (pr.folded)
-				Console::Out() << "FOLDED";
-			else
-			{
-				Console::Out() << pr.holeCards[0].ToString() << " " << pr.holeCards[1].ToString()
-					<< " (Rank: " << pr.handRank << ")";
-			}
-			if (pr.chipsWon > 0)
-				Console::Out() << " WON " << pr.chipsWon;
-			Console::Out() << std::endl;
-		}
-		Console::Out() << "=== === === === === === === ===" << std::endl;
+		GameElementPrinter::Print(result, roomId);
 	}
 	else if (task.MsgType() == RpcEnum::rpc_client_ping)
 	{

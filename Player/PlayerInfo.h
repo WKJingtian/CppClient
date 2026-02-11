@@ -41,8 +41,6 @@ public:
 	void WriteInfo(NetPack& dst);
 	void ReadInfo(NetPack& src);
 
-	void Print();
-
 	friend Player;
 	friend PlayerMgr;
 };

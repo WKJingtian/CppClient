@@ -21,6 +21,8 @@ public:
 
 	static std::ostream& Out();
 	static std::ostream& Err();
+	static std::wostream& OutW();
+	static std::wostream& ErrW();
 	static bool ReadLine(std::string& outLine);
 
 private:
@@ -34,7 +36,11 @@ private:
 	void StopInternal();
 	bool ReadLineInternal(std::string& outLine);
 
+	struct StreamState;
 	void QueueOutput(const std::string& text, bool isError);
+	void QueueOutput(const std::wstring& text, bool isError);
+	void AppendStreamText(StreamState& state, const std::wstring& text);
+	void FlushStreamBuffer(StreamState& state);
 	void QueueCommand(const std::wstring& line);
 
 	void UiThreadMain();
@@ -54,14 +60,21 @@ private:
 
 	struct OutputChunk
 	{
-		std::string text;
+		std::wstring text;
+		bool isError = false;
+	};
+
+	struct StreamState
+	{
+		std::mutex mutex;
+		std::wstring buffer;
 		bool isError = false;
 	};
 
 	class ConsoleStreamBuf final : public std::streambuf
 	{
 	public:
-		ConsoleStreamBuf(Console* console, bool isError);
+		ConsoleStreamBuf(Console* console, StreamState* state);
 
 	protected:
 		int overflow(int ch) override;
@@ -69,13 +82,23 @@ private:
 		int sync() override;
 
 	private:
-		void FlushOnNewline();
-		void FlushBuffer();
-
-		std::mutex m_mutex;
 		Console* m_console = nullptr;
-		bool m_isError = false;
-		std::string m_buffer;
+		StreamState* m_state = nullptr;
+	};
+
+	class ConsoleWideStreamBuf final : public std::wstreambuf
+	{
+	public:
+		ConsoleWideStreamBuf(Console* console, StreamState* state);
+
+	protected:
+		int_type overflow(int_type ch) override;
+		std::streamsize xsputn(const wchar_t* s, std::streamsize count) override;
+		int sync() override;
+
+	private:
+		Console* m_console = nullptr;
+		StreamState* m_state = nullptr;
 	};
 
 	std::mutex m_outputMutex;
@@ -118,8 +141,14 @@ private:
 	std::wstring m_cmdDraft;
 	size_t m_maxCmdHistory;
 
+	StreamState m_outState;
+	StreamState m_errState;
 	ConsoleStreamBuf m_outBuf;
 	ConsoleStreamBuf m_errBuf;
 	std::ostream m_outStream;
 	std::ostream m_errStream;
+	ConsoleWideStreamBuf m_outWideBuf;
+	ConsoleWideStreamBuf m_errWideBuf;
+	std::wostream m_outWideStream;
+	std::wostream m_errWideStream;
 };

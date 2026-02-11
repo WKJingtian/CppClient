@@ -2,9 +2,6 @@
 #include "HoldemTableSnapshot.h"
 #include "Net/NetPack.h"
 
-#undef min
-#undef max
-
 void HoldemSeatSnapshot::Write(NetPack& pack) const
 {
 	seat.Write(pack, showHole);
@@ -23,6 +20,7 @@ HoldemTableSnapshot HoldemTableSnapshot::Build(const HoldemPokerGame& game, int 
 	snapshot.totalPot = game.GetTotalPot();
 	snapshot.actingPlayerId = game.ActingPlayerId();
 	snapshot.lastBet = game.GetLastBet();
+	snapshot.lastRaise = game.GetLastRaise();
 	snapshot.smallBlind = game.GetSmallBlind();
 	snapshot.bigBlind = game.GetBigBlind();
 	snapshot.dealerSeatIndex = game.GetDealerSeatIndex();
@@ -51,6 +49,7 @@ void HoldemTableSnapshot::Write(NetPack& pack) const
 	pack.WriteInt32(totalPot);
 	pack.WriteInt32(actingPlayerId);
 	pack.WriteInt32(lastBet);
+	pack.WriteInt32(lastRaise);
 	pack.WriteInt32(smallBlind);
 	pack.WriteInt32(bigBlind);
 	pack.WriteInt32(dealerSeatIndex);
@@ -81,6 +80,7 @@ void HoldemTableSnapshot::Read(NetPack& pack)
 	totalPot = pack.ReadInt32();
 	actingPlayerId = pack.ReadInt32();
 	lastBet = pack.ReadInt32();
+	lastRaise = pack.ReadInt32();
 	smallBlind = pack.ReadInt32();
 	bigBlind = pack.ReadInt32();
 	dealerSeatIndex = pack.ReadInt32();

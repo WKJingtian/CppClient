@@ -15,6 +15,8 @@ public:
 		Language lang;
 	};
 
+	~AudioCenter();
+
 public:
 	bool m_mute;
 	std::queue<voiceMsg> m_voiceMsgQueue;
@@ -24,6 +26,8 @@ public:
 private:
 	std::thread m_audioPlayThread;
 	std::mutex _mutex;
+
+	bool _stopped = false;
 
 	void PlayVoiceMsg();
 };

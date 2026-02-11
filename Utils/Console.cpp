@@ -3,7 +3,6 @@
 
 namespace
 {
-	constexpr const char* kPromptA = "> ";
 	constexpr size_t kHistoryNone = static_cast<size_t>(-1);
 }
 
@@ -33,6 +32,16 @@ std::ostream& Console::Err()
 	return Instance().m_errStream;
 }
 
+std::wostream& Console::OutW()
+{
+	return Instance().m_outWideStream;
+}
+
+std::wostream& Console::ErrW()
+{
+	return Instance().m_errWideStream;
+}
+
 bool Console::ReadLine(std::string& outLine)
 {
 	return Instance().ReadLineInternal(outLine);
@@ -60,11 +69,16 @@ Console::Console()
 	m_followTail(true),
 	m_cmdHistoryIndex(kHistoryNone),
 	m_maxCmdHistory(200),
-	m_outBuf(this, false),
-	m_errBuf(this, true),
+	m_outBuf(this, &m_outState),
+	m_errBuf(this, &m_errState),
 	m_outStream(&m_outBuf),
-	m_errStream(&m_errBuf)
+	m_errStream(&m_errBuf),
+	m_outWideBuf(this, &m_outState),
+	m_errWideBuf(this, &m_errState),
+	m_outWideStream(&m_outWideBuf),
+	m_errWideStream(&m_errWideBuf)
 {
+	m_errState.isError = true;
 }
 
 Console::~Console()
@@ -153,12 +167,17 @@ bool Console::ReadLineInternal(std::string& outLine)
 
 void Console::QueueOutput(const std::string& text, bool isError)
 {
+	QueueOutput(ToWide(text), isError);
+}
+
+void Console::QueueOutput(const std::wstring& text, bool isError)
+{
 	if (!m_started.load())
 	{
 		DWORD written = 0;
 		HANDLE out = GetStdHandle(STD_OUTPUT_HANDLE);
 		if (out != INVALID_HANDLE_VALUE)
-			WriteConsoleA(out, text.c_str(), (DWORD)text.size(), &written, nullptr);
+			WriteConsoleW(out, text.c_str(), (DWORD)text.size(), &written, nullptr);
 		return;
 	}
 
@@ -170,10 +189,37 @@ void Console::QueueOutput(const std::string& text, bool isError)
 		SetEvent(m_outputEvent);
 }
 
+void Console::AppendStreamText(StreamState& state, const std::wstring& text)
+{
+	if (text.empty())
+		return;
+
+	std::lock_guard<std::mutex> lock(state.mutex);
+	state.buffer.append(text);
+
+	size_t pos = 0;
+	while ((pos = state.buffer.find(L'\n')) != std::wstring::npos)
+	{
+		std::wstring chunk = state.buffer.substr(0, pos + 1);
+		QueueOutput(chunk, state.isError);
+		state.buffer.erase(0, pos + 1);
+	}
+}
+
+void Console::FlushStreamBuffer(StreamState& state)
+{
+	std::lock_guard<std::mutex> lock(state.mutex);
+	if (state.buffer.empty())
+		return;
+
+	QueueOutput(state.buffer, state.isError);
+	state.buffer.clear();
+}
+
 void Console::QueueCommand(const std::wstring& line)
 {
 	std::string narrow = ToNarrow(line);
-	QueueOutput(std::string(kPromptA) + narrow + "\n", false);
+	QueueOutput(m_prompt + line + L"\n", false);
 
 	{
 		std::lock_guard<std::mutex> lock(m_commandMutex);
@@ -298,10 +344,12 @@ void Console::HandleKeyEvent(const KEY_EVENT_RECORD& key)
 		AdjustScroll(m_screenRows > 0 ? -(m_screenRows - 1) : -10);
 		return;
 	case VK_HOME:
-		AdjustScroll(-(int)m_maxHistoryLines);
+		while (m_caretPos > 0)
+			--m_caretPos;
 		break;
 	case VK_END:
-		ScrollToBottom();
+		while (m_caretPos < m_inputLine.size())
+			++m_caretPos;
 		return;
 	case VK_UP:
 	{
@@ -379,20 +427,19 @@ void Console::DrainOutputQueue()
 		auto chunk = std::move(local.front());
 		local.pop();
 
-		std::wstring wide = ToWide(chunk.text);
 		size_t start = 0;
-		while (start <= wide.size())
+		while (start <= chunk.text.size())
 		{
-			size_t pos = wide.find(L'\n', start);
+			size_t pos = chunk.text.find(L'\n', start);
 			std::wstring line;
 			if (pos == std::wstring::npos)
 			{
-				line = wide.substr(start);
-				start = wide.size() + 1;
+				line = chunk.text.substr(start);
+				start = chunk.text.size() + 1;
 			}
 			else
 			{
-				line = wide.substr(start, pos - start);
+				line = chunk.text.substr(start, pos - start);
 				start = pos + 1;
 			}
 			if (!line.empty() && line.back() == L'\r')
@@ -661,9 +708,9 @@ std::string Console::ToNarrow(const std::wstring& text) const
 	return result;
 }
 
-Console::ConsoleStreamBuf::ConsoleStreamBuf(Console* console, bool isError)
+Console::ConsoleStreamBuf::ConsoleStreamBuf(Console* console, StreamState* state)
 	: m_console(console),
-	m_isError(isError)
+	m_state(state)
 {
 }
 
@@ -672,10 +719,12 @@ int Console::ConsoleStreamBuf::overflow(int ch)
 	if (ch == traits_type::eof())
 		return traits_type::not_eof(ch);
 
-	std::lock_guard<std::mutex> lock(m_mutex);
-	m_buffer.push_back(static_cast<char>(ch));
-	if (ch == '\n')
-		FlushOnNewline();
+	if (m_console && m_state)
+	{
+		char value = static_cast<char>(ch);
+		std::wstring wide = m_console->ToWide(std::string(1, value));
+		m_console->AppendStreamText(*m_state, wide);
+	}
 	return ch;
 }
 
@@ -684,38 +733,53 @@ std::streamsize Console::ConsoleStreamBuf::xsputn(const char* s, std::streamsize
 	if (count <= 0)
 		return 0;
 
-	std::lock_guard<std::mutex> lock(m_mutex);
-	m_buffer.append(s, (size_t)count);
-	FlushOnNewline();
+	if (m_console && m_state)
+	{
+		std::wstring wide = m_console->ToWide(std::string(s, (size_t)count));
+		m_console->AppendStreamText(*m_state, wide);
+	}
 	return count;
 }
 
 int Console::ConsoleStreamBuf::sync()
 {
-	std::lock_guard<std::mutex> lock(m_mutex);
-	FlushBuffer();
+	if (m_console && m_state)
+		m_console->FlushStreamBuffer(*m_state);
 	return 0;
 }
 
-void Console::ConsoleStreamBuf::FlushOnNewline()
+Console::ConsoleWideStreamBuf::ConsoleWideStreamBuf(Console* console, StreamState* state)
+	: m_console(console),
+	m_state(state)
 {
-	if (!m_console)
-		return;
-
-	size_t pos = 0;
-	while ((pos = m_buffer.find('\n')) != std::string::npos)
-	{
-		std::string chunk = m_buffer.substr(0, pos + 1);
-		m_console->QueueOutput(chunk, m_isError);
-		m_buffer.erase(0, pos + 1);
-	}
 }
 
-void Console::ConsoleStreamBuf::FlushBuffer()
+Console::ConsoleWideStreamBuf::int_type Console::ConsoleWideStreamBuf::overflow(int_type ch)
 {
-	if (!m_console || m_buffer.empty())
-		return;
+	if (ch == traits_type::eof())
+		return traits_type::not_eof(ch);
 
-	m_console->QueueOutput(m_buffer, m_isError);
-	m_buffer.clear();
+	if (m_console && m_state)
+	{
+		wchar_t value = static_cast<wchar_t>(ch);
+		m_console->AppendStreamText(*m_state, std::wstring(1, value));
+	}
+	return ch;
+}
+
+std::streamsize Console::ConsoleWideStreamBuf::xsputn(const wchar_t* s, std::streamsize count)
+{
+	if (count <= 0)
+		return 0;
+
+	if (m_console && m_state)
+		m_console->AppendStreamText(*m_state, std::wstring(s, (size_t)count));
+	return count;
+}
+
+int Console::ConsoleWideStreamBuf::sync()
+{
+	if (m_console && m_state)
+		m_console->FlushStreamBuffer(*m_state);
+	return 0;
 }

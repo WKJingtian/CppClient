@@ -157,11 +157,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Audio\AudioCenter.cpp" />
+    <ClCompile Include="ServerClass\Room.cpp" />
+    <ClCompile Include="Utils\CommandProcessor.cpp" />
     <ClCompile Include="Game\GameItem\Card.cpp" />
     <ClCompile Include="Game\GameItem\Seat.cpp" />
     <ClCompile Include="Game\HoldemHandResult.cpp" />
     <ClCompile Include="Game\HoldemPokerGame.cpp" />
     <ClCompile Include="Game\HoldemTableSnapshot.cpp" />
+    <ClCompile Include="Helper\GameElementPrinter.cpp" />
     <ClCompile Include="Helper\HelpString.h" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Net\NetPack.cpp" />
@@ -172,6 +175,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Audio\AudioCenter.h" />
+    <ClInclude Include="ServerClass\Room.h" />
+    <ClInclude Include="Utils\CommandProcessor.h" />
     <ClInclude Include="Game\GameItem\Card.h" />
     <ClInclude Include="Game\GameItem\Deck.h" />
     <ClInclude Include="Game\GameItem\HandEvaluator.h" />
@@ -179,6 +184,7 @@
     <ClInclude Include="Game\HoldemHandResult.h" />
     <ClInclude Include="Game\HoldemPokerGame.h" />
     <ClInclude Include="Game\HoldemTableSnapshot.h" />
+    <ClInclude Include="Helper\GameElementPrinter.h" />
     <ClInclude Include="Net\NetPack.h" />
     <ClInclude Include="Net\NetPackHandler.h" />
     <ClInclude Include="Player\Player.h" />

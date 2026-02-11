@@ -3,6 +3,31 @@
 
 namespace HelpStrings
 {
+  static const std::string CONTENTS = R"(
+================================================================================
+[HELPER CONTENTS]
+================================================================================
+
+--------------------------------------------------------------------------------
+[USER MANUAL]
+--------------------------------------------------------------------------------
+    UP_ARROW/DN_ARROW         = BROWSE HISTORY COMMAND
+    CTRL+UP_ARROW/DN_ARROW    = SCROLL UP/DOWN
+    PG_UP/PG_DN               = SCROLL UP/DOWN
+    L_ARROW/R_ARROW           = MOVE CURSOR
+    HOME/END                  = MOVE CURSOR
+    ENTER                     = SEND
+
+--------------------------------------------------------------------------------
+[GET MORE HELP]
+--------------------------------------------------------------------------------
+    HELP -GENERIC    - General commands
+    HELP -HOLDEM     - Poker commands
+    HELP -ERROR      - Error codes
+
+================================================================================
+)";
+  
     static const std::string GENERIC = R"(
 ================================================================================
                         CHAT + ROOM COMMANDS - HELP
@@ -32,6 +57,11 @@ namespace HelpStrings
   <text>                       Send message to active room
   [en] <text>                  Send and set language to English
   [cn] <text>                  Send and set language to Chinese
+  [r##] <text>                 Send message to room ## (override per line)
+  [text] <text>                Force treat remainder as message
+  [cmd] <command>              Force treat remainder as command
+  Note: Prefixes can be chained; last [text]/[cmd] wins.
+  Note: Unknown prefixes are treated as errors.
   Note: Use USEROOM <id> before sending messages.
 
 --------------------------------------------------------------------------------
@@ -47,6 +77,43 @@ namespace HelpStrings
   HELP -HOLDEM                 Show poker help
   PING                         Ping the server
   QUIT                         Close the client
+
+================================================================================
+)";
+    static const std::string ERRORLIST = R"(
+================================================================================
+[ERROR CODES]
+================================================================================
+
+--------------------------------------------------------------------------------
+[GENERIC ERRORS]
+--------------------------------------------------------------------------------
+    0   = SUCCESS
+    1   = GENERIC_NET_ERROR
+    2   = DATABASE_ERROR
+    3   = PLAYER_STATE_ERROR
+    4   = UNKNOWN_RPC_ERROR
+    100 = USER_ALREADY_LOGGED_IN
+    101 = USER_ALREADY_LOGGED_IN_ELSEWHERE
+    102 = NOT_LOGGED_IN
+    103 = WRONG_PASSWORD
+    104 = REGISTER_FAILED
+    105 = SQL_COMMAND_FAILED
+    200 = ALREADY_IN_SELECTED_ROOM
+    201 = ROOM_NOT_EXIST
+    202 = ROOM_ALREADY_EXIST
+    203 = ROOM_ID_OVERFLOW
+    204 = ROOM_TYPE_ERROR
+
+--------------------------------------------------------------------------------
+[HOLDEM ERRORS]
+--------------------------------------------------------------------------------
+    300 = Insufficient chips in wallet
+    301 = Buy-in failed (database error)
+    302 = Blinds not set
+    303 = Not seated at table
+    304 = Already in a hand
+    305 = Invalid action
 
 ================================================================================
 )";
@@ -85,8 +152,8 @@ namespace HelpStrings
   GAME ACTIONS:
     CHECK                Check (when no bet to call)
     CALL                 Call current bet
-    BET <amount>         Place a bet
-    RAISE <amount>       Raise to specified amount
+    BET <amount>         Place a bet (must happen before anyone bets)
+    RAISE <amount>       Raise by amount (must happen after a bet)
     ALLIN                All in
     FOLD                 Fold your hand
 
@@ -113,15 +180,6 @@ namespace HelpStrings
   * Cannot buy-in during a hand
   * Leaving room auto-returns table chips to wallet
   * Leaving during hand = auto-mode (check if free, else fold)
-
---------------------------------------------------------------------------------
-[ERROR CODES]
---------------------------------------------------------------------------------
-  300 = Insufficient chips in wallet
-  301 = Buy-in failed (database error)
-  302 = Blinds not set
-  303 = Not seated at table
-  304 = Already in a hand
 
 ================================================================================
 )";

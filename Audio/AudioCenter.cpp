@@ -6,6 +6,14 @@ AudioCenter& AudioCenter::Inst()
 	static AudioCenter inst{};
 	return inst;
 }
+
+AudioCenter::~AudioCenter()
+{
+	_stopped = true;
+	if (m_audioPlayThread.joinable())
+		m_audioPlayThread.detach();
+}
+
 AudioCenter::AudioCenter()
 {
 	m_audioPlayThread = std::thread(&AudioCenter::PlayVoiceMsg, this);
@@ -26,11 +34,11 @@ void AudioCenter::PlayVoiceMsg()
 	PyConfig_SetString(&config, &config.home, L".\\Python\\embed");
 	config.site_import = 1;
 
-	// æ˜¾å¼è®¾ç½®æœç´¢è·¯å¾„
+	// ÏÔÊ½ÉèÖÃËÑË÷Â·¾¶
 	config.module_search_paths_set = 1;
 	PyWideStringList_Append(&config.module_search_paths, L".\\Python\\embed");
-	PyWideStringList_Append(&config.module_search_paths, L".\\Python\\embed\\python314.zip");          // æ ‡å‡†åº“
-	PyWideStringList_Append(&config.module_search_paths, L".\\Python\\embed\\Lib\\site-packages");     // ä½ çš„ç¬¬ä¸‰æ–¹åº“
+	PyWideStringList_Append(&config.module_search_paths, L".\\Python\\embed\\python314.zip");          // ±ê×¼¿â
+	PyWideStringList_Append(&config.module_search_paths, L".\\Python\\embed\\Lib\\site-packages");     // ÄãµÄµÚÈı·½¿â
 
 	auto status = Py_InitializeFromConfig(&config);
 	PyConfig_Clear(&config);
@@ -56,7 +64,7 @@ void AudioCenter::PlayVoiceMsg()
 	PyObject* sayFunc = PyObject_GetAttrString(pModule, "say_by_engine");
 	PyObject* engine = PyObject_CallObject(initFunc, nullptr);
 
-	while (true)
+	while (!_stopped)
 	{
 		std::this_thread::sleep_for(std::chrono::milliseconds(200));
 		while (!m_voiceMsgQueue.empty())

@@ -1,5 +1,6 @@
 #pragma once
 #include "Net/RpcEnum.h"
+#include <functional>
 
 class NetPack;
 class Player

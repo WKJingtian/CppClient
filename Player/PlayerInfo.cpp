@@ -107,11 +107,3 @@ void PlayerInfo::ReadInfo(NetPack& src)
 	m_language = (Language)src.ReadUInt8();
 	m_chipCount.store(src.ReadInt32());
 }
-
-void PlayerInfo::Print()
-{
-	Console::Out() << "player info with _id=" << GetID() << std::endl;
-	Console::Out() << "\t nickname: " << GetName() << std::endl;
-	Console::Out() << "\t language: " << (int)GetLanguage() << std::endl;
-	Console::Out() << "\t chip: " << GetChip() << std::endl;
-}

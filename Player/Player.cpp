@@ -22,7 +22,6 @@ void Player::RecvJob()
 		else
 			break;
 	} while (iResult > 0 && !m_deleted);
-	m_recvThread.detach();
 }
 void Player::OnRecv(NetPack&& pack)
 {
