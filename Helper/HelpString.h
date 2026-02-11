@@ -114,6 +114,8 @@ namespace HelpStrings
     303 = Not seated at table
     304 = Already in a hand
     305 = Invalid action
+    306 = Table is full
+    307 = Blinds you are trying to set is invalid (sb > 0 && bb >= 2 * sb)
 
 ================================================================================
 )";

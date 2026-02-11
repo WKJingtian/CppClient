@@ -187,15 +187,11 @@ void CommandProcessor::RegisterCommands()
 		});
 	} };
 
-	m_commands["SIT"] = CommandSpec{ 2, false, false, [this](const std::vector<std::string>& tokens, int room) {
+	m_commands["SIT"] = CommandSpec{ 1, false, false, [this](const std::vector<std::string>& tokens, int room) {
 		if (!RequireRoom(room))
 			return;
-		int seatIdx = 0;
-		try { seatIdx = std::stoi(tokens[1]); }
-		catch (const std::exception& e) { Console::Out() << e.what() << std::endl; return; }
-		m_player.Send(RpcEnum::rpc_server_sit_down, [room, seatIdx](NetPack& pack) {
+		m_player.Send(RpcEnum::rpc_server_sit_down, [room](NetPack& pack) {
 			pack.WriteInt32(room);
-			pack.WriteInt32(seatIdx);
 		});
 	} };
 

@@ -21,7 +21,7 @@ int main(int* args)
 		return 1;
 	}
 
-	const std::string serverPort = "4242";
+	const std::string serverPort = "80";
 	struct addrinfo* result = NULL, * ptr = NULL, hints;
 	ZeroMemory(&hints, sizeof(hints));
 	hints.ai_family = AF_INET;

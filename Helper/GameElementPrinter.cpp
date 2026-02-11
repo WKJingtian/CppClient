@@ -44,6 +44,33 @@ void GameElementPrinter::Print(const HoldemPokerGame& target, int roomId)
                 << " " << seat.hole[1].ToString() << std::endl;
         }
     }
+
+    if (target.GetLastActionPlayerId() >= 0)
+    {
+        std::string actionString = "";
+        switch (target.GetLastAction())
+        {
+        case HoldemPokerGame::Action::Fold:
+            actionString = " Folded";
+            break;
+        case HoldemPokerGame::Action::CheckCall:
+            actionString = " Checked/Called";
+            break;
+        case HoldemPokerGame::Action::Bet:
+            actionString = " Bet " + std::to_string(target.GetLastActionAmount());
+            break;
+        case HoldemPokerGame::Action::Raise:
+            actionString = " Raise By " + std::to_string(target.GetLastActionAmount());
+            break;
+        case HoldemPokerGame::Action::AllIn:
+            actionString = " All-in";
+            break;
+        }
+
+        Console::Out() << " Last Action: "
+            << " Player " << target.GetLastActionPlayerId()
+            << actionString << std::endl;
+    }
 }
 
 void GameElementPrinter::Print(const HandResult& target, int roomId)
@@ -60,7 +87,7 @@ void GameElementPrinter::Print(const HandResult& target, int roomId)
         Console::Out() << "  Player " << pr.playerId << ": ";
         if (pr.folded)
             Console::Out() << "FOLDED";
-        else
+        else if (target.isShowdown)
         {
             Console::OutW() << pr.holeCards[0].ToString() << " " << pr.holeCards[1].ToString();
             Console::Out() << " (" << HandEvaluator::ParseScore(pr.handRank) << ")";
